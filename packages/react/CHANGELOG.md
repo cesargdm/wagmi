@@ -1,5 +1,126 @@
 # wagmi
 
+## 0.4.0
+
+### Minor Changes
+
+- [#408](https://github.com/tmm/wagmi/pull/408) [`bfcc3a5`](https://github.com/tmm/wagmi/commit/bfcc3a51bbb1551753e3ccde6af134e9fd4fec9a) Thanks [@jxom](https://github.com/jxom)! - Add `configureChains` API.
+
+  The `configureChains` function allows you to configure your chains with a selected provider (Alchemy, Infura, JSON RPC, Public RPC URLs). This means you don't have to worry about deriving your own RPC URLs for each chain, or instantiating a Ethereum Provider.
+
+  `configureChains` accepts 3 parameters: an array of chains, and an array of providers, and a config object.
+
+  [Learn more about configuring chains & providers.](https://wagmi.sh/docs/providers/configuring-chains)
+
+  ### Before
+
+  ```tsx
+  import { providers } from 'ethers'
+  import { WagmiProvider, chain, createClient, defaultChains } from 'wagmi'
+  import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet'
+  import { InjectedConnector } from 'wagmi/connectors/injected'
+  import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
+  import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
+
+  const alchemyId = process.env.ALCHEMY_ID
+
+  const chains = defaultChains
+  const defaultChain = chain.mainnet
+
+  const client = createClient({
+    autoConnect: true,
+    connectors({ chainId }) {
+      const chain = chains.find((x) => x.id === chainId) ?? defaultChain
+      const rpcUrl = chain.rpcUrls.alchemy
+        ? `${chain.rpcUrls.alchemy}/${alchemyId}`
+        : chain.rpcUrls.default
+      return [
+        new MetaMaskConnector({ chains }),
+        new CoinbaseWalletConnector({
+          chains,
+          options: {
+            appName: 'wagmi',
+            chainId: chain.id,
+            jsonRpcUrl: rpcUrl,
+          },
+        }),
+        new WalletConnectConnector({
+          chains,
+          options: {
+            qrcode: true,
+            rpc: { [chain.id]: rpcUrl },
+          },
+        }),
+        new InjectedConnector({
+          chains,
+          options: { name: 'Injected' },
+        }),
+      ]
+    },
+    provider: ({ chainId }) =>
+      new providers.AlchemyProvider(chainId, alchemyId),
+  })
+  ```
+
+  ### After
+
+  ```tsx
+  import { WagmiProvider, chain, createClient, defaultChains } from 'wagmi'
+
+  import { alchemyProvider } from 'wagmi/providers/alchemy'
+  import { publicProvider } from 'wagmi/providers/public'
+
+  import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet'
+  import { InjectedConnector } from 'wagmi/connectors/injected'
+  import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
+  import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
+
+  const alchemyId = process.env.ALCHEMY_ID
+
+  const { chains, provider, webSocketProvider } = configureChains(
+    defaultChains,
+    [alchemyProvider({ alchemyId }), publicProvider()],
+  )
+
+  const client = createClient({
+    autoConnect: true,
+    connectors: [
+      new MetaMaskConnector({ chains }),
+      new CoinbaseWalletConnector({
+        chains,
+        options: {
+          appName: 'wagmi',
+        },
+      }),
+      new WalletConnectConnector({
+        chains,
+        options: {
+          qrcode: true,
+        },
+      }),
+      new InjectedConnector({
+        chains,
+        options: { name: 'Injected' },
+      }),
+    ],
+    provider,
+    webSocketProvider,
+  })
+  ```
+
+### Patch Changes
+
+- [#404](https://github.com/tmm/wagmi/pull/404) [`f81c156`](https://github.com/tmm/wagmi/commit/f81c15665e2e71534f84ada3fa705f2d78627472) Thanks [@holic](https://github.com/holic)! - Add `ProviderRpcError` and `RpcError` error classes.
+
+  Certain wagmi-standardized errors may wrap `ProviderRpcError` or `RpcError`. For these cases, you can access the original provider rpc or rpc error value using the `internal` property.
+
+* [#459](https://github.com/tmm/wagmi/pull/459) [`72dcf7c`](https://github.com/tmm/wagmi/commit/72dcf7c09e814261b2e43a8fa364c57675c472de) Thanks [@tmm](https://github.com/tmm)! - update dependencies
+
+- [#447](https://github.com/tmm/wagmi/pull/447) [`b9ebf78`](https://github.com/tmm/wagmi/commit/b9ebf782e0900725bcb76483686b30f09d357ebd) Thanks [@tmm](https://github.com/tmm)! - Fix case where connector disconnected while app was closed and stale data was returned when autoconnecting. For example, [MetaMask was locked](https://github.com/tmm/wagmi/issues/444) when page was closed.
+
+- Updated dependencies [[`f81c156`](https://github.com/tmm/wagmi/commit/f81c15665e2e71534f84ada3fa705f2d78627472), [`bfcc3a5`](https://github.com/tmm/wagmi/commit/bfcc3a51bbb1551753e3ccde6af134e9fd4fec9a), [`72dcf7c`](https://github.com/tmm/wagmi/commit/72dcf7c09e814261b2e43a8fa364c57675c472de), [`b9ebf78`](https://github.com/tmm/wagmi/commit/b9ebf782e0900725bcb76483686b30f09d357ebd), [`bfcc3a5`](https://github.com/tmm/wagmi/commit/bfcc3a51bbb1551753e3ccde6af134e9fd4fec9a)]:
+  - @wagmi/core@0.3.0
+
 ## 0.3.5
 
 ### Patch Changes
